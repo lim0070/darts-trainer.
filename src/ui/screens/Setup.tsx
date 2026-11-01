@@ -222,7 +222,7 @@ export function Setup({ entry }: { entry: string }) {
       )}
       {config && (
         <section className="section">
-          <h2>Rules</h2>
+          <h2>Game</h2>
           <Options entry={entry} config={config} onChange={setConfig} />
         </section>
       )}

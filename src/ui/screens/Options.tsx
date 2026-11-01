@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'wouter';
 import { defaultRoundLimit, presetRules, type RulesPreset } from '../../engine/rules';
 import type {
   AtcConfig,
@@ -13,6 +14,7 @@ import type {
   X01Config,
 } from '../../engine/types';
 import { Field, Segmented, Switch } from '../components/Controls';
+import { triggerList } from '../format';
 
 type Patch = (p: Partial<GameConfig>) => void;
 
@@ -150,20 +152,17 @@ function X01Options({ c, set }: { c: X01Config; set: Patch }) {
 
 function PunishOptions({ c, set }: { c: X01Config; set: Patch }) {
   const p = c.punish;
-  const triggers = [
-    p.bust && 'busts',
-    p.missedCheckout && 'missed finishes',
-    p.lowScoreBelow !== null && `visits under ${p.lowScoreBelow}`,
-    p.surprisePct > 0 && `${p.surprisePct}% surprise`,
-  ].filter(Boolean);
   return (
     <div className="panel">
       <Switch checked={p.on} onChange={(on) => set({ punish: { ...p, on } } as Partial<X01Config>)}>
         <strong>Punishments</strong>
         <span className="muted small" style={{ display: 'block' }}>
-          {p.on ? `Random card for ${triggers.join(', ') || 'nothing yet'}` : 'Off for this game'}
+          {p.on ? `Random card for ${triggerList(p)}` : 'Off for this game'}
         </span>
       </Switch>
+      <Link href="/punishments" className="disclosure">
+        Change cards and triggers
+      </Link>
     </div>
   );
 }
@@ -231,8 +230,8 @@ export function Options({ entry, config, onChange }: { entry: string; config: Ga
     case 'x01':
       return (
         <>
-          <X01Options c={c} set={set} />
           {entry === 'x01' && <PunishOptions c={c} set={set} />}
+          <X01Options c={c} set={set} />
         </>
       );
     case 'cricket':

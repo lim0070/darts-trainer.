@@ -90,9 +90,14 @@ test('cricket against a bot at your level to the end', async ({ page }) => {
   await page.getByRole('button', { name: 'Start' }).click();
   await expect(page.locator('.cgrid')).toBeVisible();
   const plan: [string, string][] = [
-    ['t', '20'], ['t', '19'], ['t', '18'],
-    ['t', '17'], ['t', '16'], ['t', '15'],
-    ['d', 'Bull'], ['s', 'Bull'],
+    ['t', '20'],
+    ['t', '19'],
+    ['t', '18'],
+    ['t', '17'],
+    ['t', '16'],
+    ['t', '15'],
+    ['d', 'Bull'],
+    ['s', 'Bull'],
   ];
   let i = 0;
   for (let guard = 0; guard < 400; guard++) {
@@ -167,4 +172,23 @@ test('works offline and restores a backup on a fresh device', async ({ page, con
   await p2.goto('./#/history');
   await expect(p2.locator('.item', { hasText: 'Count-Up' }).first()).toBeVisible();
   await fresh.close();
+});
+
+test('punishments screen is reachable from home and the 01 setup', async ({ page }) => {
+  await home(page);
+  await page.getByRole('link', { name: /Punishments/ }).click();
+  await expect(page.getByRole('heading', { name: 'When cards come up' })).toBeVisible();
+  const deck = page.locator('h2 .hint');
+  await expect(deck).toHaveText('10 of 10 on');
+  await page.getByRole('switch', { name: 'Use N push-ups' }).click();
+  await expect(deck).toHaveText('9 of 10 on');
+  const under30 = page.getByRole('group', { name: 'Low-score visit' }).getByRole('button', { name: 'Under 30' });
+  await under30.click();
+  await expect(under30).toHaveAttribute('aria-pressed', 'true'); // saved before we leave the page
+
+  await home(page);
+  await page.getByRole('link', { name: /01 game/ }).click();
+  await expect(page.locator('.panel', { hasText: 'Punishments' })).toContainText('visits under 30');
+  await page.getByRole('link', { name: 'Change cards and triggers' }).click();
+  await expect(page.locator('h2 .hint')).toHaveText('9 of 10 on');
 });

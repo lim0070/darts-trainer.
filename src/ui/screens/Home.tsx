@@ -93,6 +93,14 @@ export function Home() {
               </span>
             </span>
           </Link>
+          <Link href="/punishments" className="item">
+            <span className="grow">
+              <span className="title">Punishments</span>
+              <span className="desc" style={{ display: 'block' }}>
+                Your cards and when they come up
+              </span>
+            </span>
+          </Link>
         </div>
       </section>
 

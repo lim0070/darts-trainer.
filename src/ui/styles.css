@@ -1292,6 +1292,9 @@ a {
 }
 
 .disclosure {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
   align-self: flex-start;
   background: none;
   border: 0;

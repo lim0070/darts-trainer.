@@ -4,9 +4,9 @@ import { Link } from 'wouter';
 import { exportBackup, importBackup, parseBackup } from '../../db/backup';
 import { setPrefs } from '../../db/repo';
 import { db } from '../../db/schema';
-import type { PunishRules } from '../../engine/types';
-import { Field, Segmented, Switch } from '../components/Controls';
+import { Field, Segmented } from '../components/Controls';
 import { TopBar } from '../components/TopBar';
+import { triggerList } from '../format';
 import { usePrefs } from '../hooks';
 
 async function saveFile(name: string, text: string) {
@@ -33,7 +33,6 @@ export function Settings() {
   const [message, setMessage] = useState<string | null>(null);
   const games = useLiveQuery(() => db.games.count(), []);
   const p = prefs.punish;
-  const setPunish = (patch: Partial<PunishRules>) => setPrefs({ punish: { ...p, ...patch } });
 
   useEffect(() => {
     navigator.storage
@@ -76,37 +75,16 @@ export function Settings() {
 
       <section className="section">
         <h2>Punishments</h2>
-        <p className="prose small">In 01 games a random card comes up when one of these happens. Only one card per visit.</p>
-        <div className="panel">
-          <Switch checked={p.on} onChange={(on) => setPunish({ on })}>
-            On for new 01 games
-          </Switch>
-          <Switch checked={p.bust} onChange={(bust) => setPunish({ bust })}>
-            After a bust
-          </Switch>
-          <Switch checked={p.missedCheckout} onChange={(missedCheckout) => setPunish({ missedCheckout })}>
-            After missing a finish
-          </Switch>
+        <div className="list">
+          <Link href="/punishments" className="item">
+            <span className="grow">
+              <span className="title">Cards and triggers</span>
+              <span className="desc" style={{ display: 'block' }}>
+                {p.on ? `On for new 01 games: ${triggerList(p)}` : 'Off for new 01 games'}
+              </span>
+            </span>
+          </Link>
         </div>
-        <Field label="Low-score visit" help="Only counts when you're too far out to finish.">
-          <Segmented
-            label="Low-score visit"
-            value={p.lowScoreBelow ?? 0}
-            options={[0, 20, 26, 30, 40].map((v) => ({ value: v, label: v ? `Under ${v}` : 'Off' }))}
-            onChange={(v) => setPunish({ lowScoreBelow: v || null })}
-          />
-        </Field>
-        <Field label="Surprise card" help="A random chance on any visit.">
-          <Segmented
-            label="Surprise"
-            value={p.surprisePct}
-            options={[0, 5, 10, 20].map((v) => ({ value: v, label: v ? `${v}%` : 'Off' }))}
-            onChange={(surprisePct) => setPunish({ surprisePct })}
-          />
-        </Field>
-        <Link href="/settings/cards" className="btn">
-          Edit punishment cards
-        </Link>
       </section>
 
       <section className="section">

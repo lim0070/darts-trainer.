@@ -1,7 +1,6 @@
 import { Route, Router, Switch } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { useUpdateReady } from './hooks';
-import { Cards } from './screens/Cards';
 import { GameScreen } from './screens/Game';
 import { GameDetail } from './screens/GameDetail';
 import { History } from './screens/History';
@@ -10,6 +9,7 @@ import { PlanEditor } from './screens/PlanEditor';
 import { PlanRun } from './screens/PlanRun';
 import { Plans } from './screens/Plans';
 import { Players } from './screens/Players';
+import { Punishments } from './screens/Punishments';
 import { Settings } from './screens/Settings';
 import { Setup } from './screens/Setup';
 import { Stats } from './screens/Stats';
@@ -42,7 +42,8 @@ export function App() {
         <Route path="/plans/:id">{(p) => <PlanEditor key={p.id} id={p.id} />}</Route>
         <Route path="/run/:id">{(p) => <PlanRun key={p.id} id={p.id} />}</Route>
         <Route path="/settings" component={Settings} />
-        <Route path="/settings/cards" component={Cards} />
+        <Route path="/punishments" component={Punishments} />
+        <Route path="/settings/cards" component={Punishments} />
         <Route component={Home} />
       </Switch>
       <UpdateToast />

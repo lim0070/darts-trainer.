@@ -1,9 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { uid } from '../../db/repo';
+import { setPrefs, uid } from '../../db/repo';
 import { db, type PunishPoolRow } from '../../db/schema';
 import { Field, Segmented, Sheet, Switch } from '../components/Controls';
+import type { PunishRules } from '../../engine/types';
 import { TopBar } from '../components/TopBar';
+import { usePrefs } from '../hooks';
 
 const blank = (): PunishPoolRow => ({
   id: uid(),
@@ -120,36 +122,85 @@ function Editor({ card, onClose }: { card: PunishPoolRow; onClose: () => void })
   );
 }
 
-export function Cards() {
+/** Everything about punishments in one place: when cards come up, and the deck itself. */
+export function Punishments() {
+  const prefs = usePrefs();
+  const p = prefs.punish;
+  const setPunish = (patch: Partial<PunishRules>) => setPrefs({ punish: { ...p, ...patch } });
   const cards = useLiveQuery(() => db.punishPool.toArray(), []);
   const [editing, setEditing] = useState<PunishPoolRow | null>(null);
   const on = (cards ?? []).filter((c) => c.enabled).length;
   return (
     <main className="screen">
-      <TopBar title="Punishment cards" sub={`${on} in the deck`} back="/settings" />
-      <p className="prose small">Cards are drawn at random. Turn off the ones you don't want, or add your own.</p>
-      <div className="list">
-        {(cards ?? []).map((c) => (
-          <div key={c.id} className="item">
-            <button className="grow" style={{ background: 'none', border: 0, textAlign: 'left', padding: 0 }} onClick={() => setEditing(c)}>
-              <span className="title">{c.text.replace('{n}', 'N')}</span>
-              <span className="desc" style={{ display: 'block' }}>
-                {rangeText(c)}
-                {c.weight > 1 ? `, comes up ${c.weight === 2 ? 'often' : 'very often'}` : ''}
-                {!c.builtin ? ', yours' : ''}
-              </span>
-            </button>
-            <div style={{ width: 64 }}>
-              <Switch checked={c.enabled} onChange={(enabled) => db.punishPool.update(c.id, { enabled })}>
-                <span className="sr-only">Use {c.text.replace('{n}', 'N')}</span>
-              </Switch>
+      <TopBar title="Punishments" back="/" />
+
+      <section className="section">
+        <h2>When cards come up</h2>
+        <p className="prose small">In 01 games a random card comes up when one of these happens. Only one card per visit.</p>
+        <div className="panel">
+          <Switch checked={p.on} onChange={(v) => setPunish({ on: v })}>
+            On for new 01 games
+          </Switch>
+          <Switch checked={p.bust} onChange={(bust) => setPunish({ bust })}>
+            After a bust
+          </Switch>
+          <Switch checked={p.missedCheckout} onChange={(missedCheckout) => setPunish({ missedCheckout })}>
+            After missing a finish
+          </Switch>
+        </div>
+        <Field label="Low-score visit" help="Only counts when you're too far out to finish.">
+          <Segmented
+            label="Low-score visit"
+            value={p.lowScoreBelow ?? 0}
+            options={[0, 20, 26, 30, 40].map((v) => ({ value: v, label: v ? `Under ${v}` : 'Off' }))}
+            onChange={(v) => setPunish({ lowScoreBelow: v || null })}
+          />
+        </Field>
+        <Field label="Surprise card" help="A random chance on any visit.">
+          <Segmented
+            label="Surprise"
+            value={p.surprisePct}
+            options={[0, 5, 10, 20].map((v) => ({ value: v, label: v ? `${v}%` : 'Off' }))}
+            onChange={(surprisePct) => setPunish({ surprisePct })}
+          />
+        </Field>
+      </section>
+
+      <section className="section">
+        <h2>
+          Cards
+          <span className="hint">
+            {on} of {(cards ?? []).length} on
+          </span>
+        </h2>
+        <p className="prose small">Cards are drawn at random. Turn off the ones you don't want, or add your own.</p>
+        <div className="list">
+          {(cards ?? []).map((c) => (
+            <div key={c.id} className="item">
+              <button
+                className="grow"
+                style={{ background: 'none', border: 0, textAlign: 'left', padding: 0 }}
+                onClick={() => setEditing(c)}
+              >
+                <span className="title">{c.text.replace('{n}', 'N')}</span>
+                <span className="desc" style={{ display: 'block' }}>
+                  {rangeText(c)}
+                  {c.weight > 1 ? `, comes up ${c.weight === 2 ? 'often' : 'very often'}` : ''}
+                  {!c.builtin ? ', yours' : ''}
+                </span>
+              </button>
+              <div style={{ width: 64 }}>
+                <Switch checked={c.enabled} onChange={(enabled) => db.punishPool.update(c.id, { enabled })}>
+                  <span className="sr-only">Use {c.text.replace('{n}', 'N')}</span>
+                </Switch>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <button className="btn" onClick={() => setEditing(blank())}>
-        Add your own card
-      </button>
+          ))}
+        </div>
+        <button className="btn" onClick={() => setEditing(blank())}>
+          Add your own card
+        </button>
+      </section>
       {editing && <Editor card={editing} onClose={() => setEditing(null)} />}
     </main>
   );

@@ -2,7 +2,7 @@ import type { GameRow } from '../db/schema';
 import { catalogEntry } from '../engine/drills/catalogue';
 import { type AnyState, summarize } from '../engine/reduce';
 import { ppr } from '../engine/stats';
-import type { GameConfig } from '../engine/types';
+import type { GameConfig, PunishRules } from '../engine/types';
 
 /** "Sam wins", but "You win". */
 export function wins(name: string, what = ''): string {
@@ -73,4 +73,15 @@ export function dateLabel(ts: number): string {
   const yesterday = new Date(today.getTime() - 86_400_000);
   if (d.toDateString() === yesterday.toDateString()) return `Yesterday ${time}`;
   return d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ` ${time}`;
+}
+
+/** What triggers a punishment card, e.g. "busts, missed finishes, visits under 26". */
+export function triggerList(p: PunishRules): string {
+  const t = [
+    p.bust && 'busts',
+    p.missedCheckout && 'missed finishes',
+    p.lowScoreBelow !== null && `visits under ${p.lowScoreBelow}`,
+    p.surprisePct > 0 && `${p.surprisePct}% surprise`,
+  ].filter(Boolean);
+  return t.join(', ') || 'nothing yet';
 }
